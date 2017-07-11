@@ -149,8 +149,8 @@ for repo_tag in $image_list; do
         commitstring="$(docker exec  ${container_id}  cat /RackHD/${repo}/${commit_string_file})"
         get_repo_hashcode ${commitstring} ${repo}
 
-        check_on_core_hashcode ${commitstring} ${repo} ${repo_tag} "exec"
-        check_on_tasks_hashcode ${commitstring} ${repo} ${repo_tag} "exec"
+        check_on_core_hashcode ${commitstring} ${repo} ${container_id} "exec"
+        check_on_tasks_hashcode ${commitstring} ${repo} ${container_id} "exec"
         ;;
 
     "on-syslog" | "on-dhcp-proxy" | "on-tftp")
@@ -159,7 +159,7 @@ for repo_tag in $image_list; do
         commitstring="$(docker exec  ${container_id}  cat /RackHD/${repo}/${commit_string_file})"
         get_repo_hashcode ${commitstring} ${repo}
 
-        check_on_core_hashcode ${commitstring} ${repo} ${repo_tag} "exec"
+        check_on_core_hashcode ${commitstring} ${repo} ${container_id} "exec"
         ;;
     esac
 done

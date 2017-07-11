@@ -146,6 +146,9 @@ for repo_tag in $image_list; do
         hashcode="${commitstring:0:7}"
         echo "[DEBUG]repo:${repo}, commitstring:${commitstring}, hashcode:${hashcode}"
         echo "${repo}:${hashcode}" >> ${docker_repo_commit_file}
+
+        on_core_commitstring="$(docker exec $container_id cat /RackHD/${repo}/node_modules/on-core/${commit_string_file})"
+        hashcode="${on_core_commitstring:0:7}"
         is_core_correct ${hashcode}
         ;;
     esac

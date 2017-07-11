@@ -85,7 +85,7 @@ check_on_core_hashcode(){
     repo=$2
     repo_tag=$3
     cmd=$4
-    on_core_commitstring="$(docker ${command}  ${repo_tag}  cat /RackHD/${repo}/node_modules/on-core/${commit_string_file})"
+    on_core_commitstring="$(docker ${cmd}  ${repo_tag}  cat /RackHD/${repo}/node_modules/on-core/${commit_string_file})"
     on_core_hashcode="${on_core_commitstring:0:7}"
     is_core_correct ${on_core_hashcode}
 }
@@ -96,7 +96,7 @@ check_on_tasks_hashcode(){
     repo=$2
     repo_tag=$3
     cmd=$4
-    on_tasks_commitstring="$(docker ${command}  ${repo_tag}  cat /RackHD/${repo}/node_modules/on-tasks/${commit_string_file})"
+    on_tasks_commitstring="$(docker ${cmd}  ${repo_tag}  cat /RackHD/${repo}/node_modules/on-tasks/${commit_string_file})"
     on_tasks_hashcode="${on_tasks_commitstring:0:7}"
     is_tasks_correct ${on_tasks_hashcode}
 }

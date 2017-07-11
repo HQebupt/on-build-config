@@ -5,7 +5,10 @@ build_record=`ls ${DOCKER_RECORD_PATH}`
 docker_repo_commit_file="${DOCKER_REPO_HASHCODE_FILE}"
 commit_string_file=commitstring.txt
 
-# load docker images
+on_core_hash=
+on_tasks_hash=
+
+# docker images
 image_list=`head -n 1 $build_record`
 
 running_container="$(docker ps -q | wc -l)"
@@ -25,69 +28,126 @@ if [ ${running_container} -lt 9 ]; then
     exit 1
 fi
 
+# clean up docker env: clean_docker_env ${repo_tag}
+clean_docker_env(){
+    container_id="$(docker ps -a -q --filter ancestor=$1 --format="{{.ID}}")"
+    for container in ${container_id}; do
+        echo "[DEBUG] docker rm container:${container}"
+        docker rm ${container}
+    done    
+}
+
+# is_core_correct ${hashcode}
+is_core_correct(){
+    if [ -z "${on_core_hash}" ]; then 
+        echo "on-core hashcode is empty. set value." 
+        on_core_hash="$1"
+    else
+        echo "on-core hashcode is not empty. compare value."  
+        if [ "${on_core_hash}" != "$1" ]; then
+            echo "[ERROR] on-core hashcode is not coincident. ${on_core_hash}:$1"
+            exit 1
+        fi
+    fi
+}
+
+# is_tasks_correct ${hashcode}
+is_tasks_correct(){
+    if [ -z "${on_tasks_hash}" ]; then 
+        echo "on-tasks hashcode is empty. set value." 
+        on_tasks_hash="$1"
+    else
+        echo "on-tasks hashcode is not empty. compare value."  
+        if [ "${on_tasks_hash}" != "$1" ]; then
+            echo "[ERROR] on-tasks hashcode is not coincident. ${on_tasks_hash}:$1"
+            exit 1
+        fi
+    fi
+}
+
 #get docker commit hashcode, store in file:docker_repo_hashcode.txt
-rm -rf $docker_repo_commit_file
+rm -rf ${docker_repo_commit_file}
 for repo_tag in $image_list; do
     repo_tmp="${repo_tag%:*}" 
     repo="${repo_tmp##'rackhd/'}"
     echo "[Debug] rep_tag:${repo_tag}, repo:${repo}"
-    case "$repo" in
-    "on-core" | "on-tasks")
+    case "${repo}" in
+    "ucs-service")
         ;;
+
     "files")
         container_id="$(docker ps -q --filter ancestor=${repo_tag} --format="{{.ID}}")"
         echo "[DEBUG] repo_tag:${repo_tag}, running container_id:${container_id}"
-        commitstring="$(docker exec  ${container_id}  cat /RackHD/downloads/common/$commit_string_file)"
+        commitstring="$(docker exec  ${container_id}  cat /RackHD/downloads/common/${commit_string_file})"
         hashcode="${commitstring:0:7}"
         echo "[DEBUG]repo:${repo}, commitstring:${commitstring}, hashcode:${hashcode}"
-        echo "on-imagebuilder:$hashcode" >> $docker_repo_commit_file
+        echo "on-imagebuilder:${hashcode}" >> ${docker_repo_commit_file}
         ;;
 
-    "on-http")
-        container_id="$(docker ps -q --filter ancestor=${repo_tag} --format="{{.ID}}")"
-        echo "[DEBUG] repo_tag:${repo_tag}, running container_id:${container_id}"
-        commitstring="$(docker exec  ${container_id}  cat /RackHD/$repo/$commit_string_file)"
+    "on-wss" | "on-statsd")
+        commitstring="$(docker run  ${repo_tag}  cat /RackHD/${repo}/${commit_string_file})"
         hashcode="${commitstring:0:7}"
         echo "[DEBUG]repo:${repo}, commitstring:${commitstring}, hashcode:${hashcode}"
-        echo "$repo:$hashcode" >> $docker_repo_commit_file
+        echo "${repo}:${hashcode}" >> ${docker_repo_commit_file}
 
-        commitstring_on_core="$(docker exec $container_id cat /RackHD/$repo/node_modules/on-core/commitstring.txt)"
-        hashcode="${commitstring_on_core:0:7}"
-        echo "on-core:$hashcode" >> $docker_repo_commit_file
-
-        commitstring_on_tasks="$(docker exec $container_id cat /RackHD/$repo/node_modules/on-tasks/commitstring.txt)"
-        hashcode="${commitstring_on_tasks:0:7}"
-        echo "on-tasks:$hashcode" >> $docker_repo_commit_file
-        ;;
-
-    "on-wss" | "on-statsd" | "ucs-service")
-        if [ "$repo" == "ucs-service" ]; then
-            commitstring="$(docker run  ${repo_tag} cat /usr/src/app/$commit_string_file)"
-        else
-            commitstring="$(docker run  ${repo_tag}  cat /RackHD/$repo/$commit_string_file)"
-        fi
-        hashcode="${commitstring:0:7}"
-        echo "[DEBUG]repo:${repo}, commitstring:${commitstring}, hashcode:${hashcode}"
-        echo "$repo:$hashcode" >> $docker_repo_commit_file
-
+        on_core_commitstring="$(docker run  ${repo_tag}  cat /RackHD/${repo}/node_modules/on-core/${commit_string_file})"
+        on_core_hashcode="${on_core_commitstring:0:7}"
+        is_core_correct ${on_core_hashcode}
         # clean up env
-        container_id="$(docker ps -a -q --filter ancestor=${repo_tag} --format="{{.ID}}")"
-        for container in ${container_id}; do
-            echo "[DEBUG] docker rm container:${container}, belong repo:$repo"
-            docker rm $container
-        done
+        clean_docker_env ${repo_tag}
         ;;
 
-    *)
-        container_id="$(docker ps -q --filter ancestor=${repo_tag} --format="{{.ID}}")"
-        echo "[DEBUG] repo_tag:${repo_tag}, running container_id:${container_id}"
-        commitstring="$(docker exec  ${container_id}  cat /RackHD/$repo/$commit_string_file)"
+    "on-core")
+        commitstring="$(docker run  ${repo_tag}  cat /RackHD/${repo}/${commit_string_file})"
         hashcode="${commitstring:0:7}"
         echo "[DEBUG]repo:${repo}, commitstring:${commitstring}, hashcode:${hashcode}"
-        echo "$repo:$hashcode" >> $docker_repo_commit_file
+        echo "${repo}:${hashcode}" >> ${docker_repo_commit_file}
+        is_core_correct ${hashcode}
+        # clean up env
+        clean_docker_env ${repo_tag}
+        ;;
+
+    "on-tasks")
+        commitstring="$(docker run  ${repo_tag}  cat /RackHD/${repo}/${commit_string_file})"
+        hashcode="${commitstring:0:7}"
+        echo "[DEBUG]repo:${repo}, commitstring:${commitstring}, hashcode:${hashcode}"
+        echo "${repo}:${hashcode}" >> ${docker_repo_commit_file}
+        is_tasks_correct ${hashcode}
+
+        on_core_commitstring="$(docker run  ${repo_tag}  cat /RackHD/${repo}/node_modules/on-core/${commit_string_file})"
+        hashcode="${on_core_commitstring:0:7}"
+        is_core_correct ${hashcode}
+        # clean up env
+        clean_docker_env ${repo_tag}
+        ;;
+
+    "on-http" | "on-taskgraph")
+        container_id="$(docker ps -q --filter ancestor=${repo_tag} --format="{{.ID}}")"
+        echo "[DEBUG] repo_tag:${repo_tag}, running container_id:${container_id}"
+        commitstring="$(docker exec  ${container_id}  cat /RackHD/${repo}/${commit_string_file})"
+        hashcode="${commitstring:0:7}"
+        echo "[DEBUG]repo:${repo}, commitstring:${commitstring}, hashcode:${hashcode}"
+        echo "${repo}:${hashcode}" >> ${docker_repo_commit_file}
+
+        on_core_commitstring="$(docker exec $container_id cat /RackHD/${repo}/node_modules/on-core/${commit_string_file})"
+        hashcode="${on_core_commitstring:0:7}"
+        is_core_correct ${hashcode}
+
+        on_tasks_commitstring="$(docker exec $container_id cat /RackHD/${repo}/node_modules/on-tasks/${commit_string_file})"
+        hashcode="${on_tasks_commitstring:0:7}"
+        is_tasks_correct ${hashcode}
+        ;;
+
+    "on-syslog" | "on-dhcp-proxy" | "on-tftp")
+        container_id="$(docker ps -q --filter ancestor=${repo_tag} --format="{{.ID}}")"
+        echo "[DEBUG] repo_tag:${repo_tag}, running container_id:${container_id}"
+        commitstring="$(docker exec  ${container_id}  cat /RackHD/${repo}/${commit_string_file})"
+        hashcode="${commitstring:0:7}"
+        echo "[DEBUG]repo:${repo}, commitstring:${commitstring}, hashcode:${hashcode}"
+        echo "${repo}:${hashcode}" >> ${docker_repo_commit_file}
+        is_core_correct ${hashcode}
         ;;
     esac
 done
-
 
 

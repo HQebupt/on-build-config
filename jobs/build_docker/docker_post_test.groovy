@@ -72,9 +72,6 @@ def generateTestBranches(function_test){
                                         '''
 
                                         // Add commit/version checking in docker-post-test
-                                        unstash "$DOCKER_STASH_NAME"
-                                        env.DOCKER_PATH="${env.DOCKER_STASH_PATH}"
-                                        env.DOCKER_RECORD_PATH="${env.DOCKER_RECORD_STASH_PATH}"
                                         println "[DEBUG] stash_manifest_name:" + "$stash_manifest_name"
                                         unstash "$stash_manifest_name"
                                         env.MANIFEST_FILE="$stash_manifest_path"

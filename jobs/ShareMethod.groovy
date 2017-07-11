@@ -57,8 +57,8 @@ def buildPackage(String repo_dir){
 
 def testOVA(String repo_dir){
     def function_test = load(repo_dir + "/jobs/FunctionTest/FunctionTest.groovy")
-    def ova_post_test = load(repo_dir + "/jobs/build_ova/ova_post_test.groovy")
-    ova_post_test.runTests(function_test)
+    //def ova_post_test = load(repo_dir + "/jobs/build_ova/ova_post_test.groovy")
+    //ova_post_test.runTests(function_test)
 }
 
 def testDocker(String repo_dir){
@@ -68,11 +68,11 @@ def testDocker(String repo_dir){
 }
 
 def testVagrant(String repo_dir){
-    load(repo_dir + "/jobs/build_vagrant/vagrant_post_test.groovy")
+    //load(repo_dir + "/jobs/build_vagrant/vagrant_post_test.groovy")
 }
 
 def buildOVA(String repo_dir){
-    load(repo_dir + "/jobs/build_ova/build_ova.groovy")
+    //load(repo_dir + "/jobs/build_ova/build_ova.groovy")
 }
 
 def buildDocker(String repo_dir){
@@ -80,7 +80,7 @@ def buildDocker(String repo_dir){
 }
 
 def buildVagrant(String repo_dir){
-    load(repo_dir + "/jobs/build_vagrant/build_vagrant.groovy")
+    //load(repo_dir + "/jobs/build_vagrant/build_vagrant.groovy")
 }
 
 def buildImages(String repo_dir){

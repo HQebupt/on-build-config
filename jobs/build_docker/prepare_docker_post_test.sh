@@ -6,8 +6,10 @@ set -e
 # otherwise mongo and rabbitmq service won't run normally
 # use host mongo and rabbitmq is a chioce but the coverage may be decreased.
 # services will be restart in cleanup.sh, which script will always be executed.
+set +e
 echo $SUDO_PASSWORD |sudo -S service mongodb stop
 echo $SUDO_PASSWORD |sudo -S service rabbitmq-server stop
+set -e
 
 rackhd_docker_images=`ls ${DOCKER_PATH}`
 # load docker images

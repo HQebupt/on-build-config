@@ -1,5 +1,6 @@
 #!/bin/bash 
 set -e
+set -x
 
 build_record=`ls ${DOCKER_RECORD_PATH}`
 docker_repo_commit_file="${DOCKER_REPO_HASHCODE_FILE}"

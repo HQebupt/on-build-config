@@ -126,7 +126,7 @@ for repo_tag in $image_list; do
         container_id="$(docker ps -q --filter ancestor=${repo_tag} --format="{{.ID}}")"
         echo "[DEBUG] repo_tag:${repo_tag}, running container_id:${container_id}"
         commitstring="$(docker exec  ${container_id}  cat /RackHD/downloads/common/${commit_string_file})"
-        get_repo_hashcode "${commitstring}" ${repo}
+        get_repo_hashcode "${commitstring}" "on-imagebuilder"
         ;;
 
     "on-wss" | "on-statsd")

@@ -79,24 +79,28 @@ get_repo_hashcode(){
     echo "${repo}:${hashcode}" >> ${docker_repo_commit_file}
 }
 
-# check on core hashcode: check_on_core_hashcode ${commitstring} ${repo} ${repo_tag} ${cmd}
+# check on core hashcode: 
+# call 1: check_on_core_hashcode "${commitstring}" ${repo} ${repo_tag} "run"
+# call 2: check_on_core_hashcode "${commitstring}" ${repo} ${container_id} "exec"
 check_on_core_hashcode(){
     commitstring=$1
     repo=$2
-    repo_tag=$3
+    item=$3
     cmd=$4
-    on_core_commitstring="$(docker ${cmd}  ${repo_tag}  cat /RackHD/${repo}/node_modules/on-core/${commit_string_file})"
+    on_core_commitstring="$(docker ${cmd}  ${item}  cat /RackHD/${repo}/node_modules/on-core/${commit_string_file})"
     on_core_hashcode="${on_core_commitstring:0:7}"
     is_core_correct ${on_core_hashcode}
 }
 
-# check on tasks hashcode: check_on_tasks_hashcode ${commitstring} ${repo} ${repo_tag} ${cmd}
+# check on tasks hashcode: 
+# call 1: check_on_tasks_hashcode "${commitstring}" ${repo} ${repo_tag} "run"
+# call 2: check_on_tasks_hashcode "${commitstring}" ${repo} ${container_id} "exec"
 check_on_tasks_hashcode(){
     commitstring=$1
     repo=$2
-    repo_tag=$3
+    item=$3
     cmd=$4
-    on_tasks_commitstring="$(docker ${cmd}  ${repo_tag}  cat /RackHD/${repo}/node_modules/on-tasks/${commit_string_file})"
+    on_tasks_commitstring="$(docker ${cmd}  ${item}  cat /RackHD/${repo}/node_modules/on-tasks/${commit_string_file})"
     on_tasks_hashcode="${on_tasks_commitstring:0:7}"
     is_tasks_correct ${on_tasks_hashcode}
 }
@@ -122,7 +126,7 @@ for repo_tag in $image_list; do
         commitstring="$(docker run  ${repo_tag}  cat /RackHD/${repo}/${commit_string_file})"
         get_repo_hashcode ${commitstring} ${repo}
         
-        check_on_core_hashcode ${commitstring} ${repo} ${repo_tag} "run"
+        check_on_core_hashcode "${commitstring}" ${repo} ${repo_tag} "run"
         clean_docker_env ${repo_tag}
         ;;
 
@@ -139,7 +143,7 @@ for repo_tag in $image_list; do
         get_repo_hashcode ${commitstring} ${repo}
         is_tasks_correct ${hashcode}
 
-        check_on_core_hashcode ${commitstring} ${repo} ${repo_tag} "run"
+        check_on_core_hashcode "${commitstring}" ${repo} ${repo_tag} "run"
         clean_docker_env ${repo_tag}
         ;;
 
@@ -149,8 +153,8 @@ for repo_tag in $image_list; do
         commitstring="$(docker exec  ${container_id}  cat /RackHD/${repo}/${commit_string_file})"
         get_repo_hashcode ${commitstring} ${repo}
 
-        check_on_core_hashcode ${commitstring} ${repo} ${container_id} "exec"
-        check_on_tasks_hashcode ${commitstring} ${repo} ${container_id} "exec"
+        check_on_core_hashcode "${commitstring}" ${repo} ${container_id} "exec"
+        check_on_tasks_hashcode "${commitstring}" ${repo} ${container_id} "exec"
         ;;
 
     "on-syslog" | "on-dhcp-proxy" | "on-tftp")
@@ -159,7 +163,7 @@ for repo_tag in $image_list; do
         commitstring="$(docker exec  ${container_id}  cat /RackHD/${repo}/${commit_string_file})"
         get_repo_hashcode ${commitstring} ${repo}
 
-        check_on_core_hashcode ${commitstring} ${repo} ${container_id} "exec"
+        check_on_core_hashcode "${commitstring}" ${repo} ${container_id} "exec"
         ;;
     esac
 done

@@ -1,9 +1,17 @@
 #!/bin/bash 
 set -e
 
-build_record=`ls ${DOCKER_RECORD_PATH}`
+# get each repo's docker image commit hashcode, save to file: ${docker_repo_commit_file}. 
+# each docker image check its basic images's commit hashcode.
+# 
+# dependency graph:
+# on-syslog,on-dhcp,on-tftp,on-wss,on-statsd,on-tasks  ------> on-core
+# on-taskgraph,on-http ------> on-tasks
+
+
+build_record=`ls $1`
 image_list=`head -n 1 $build_record`
-docker_repo_commit_file="${DOCKER_REPO_HASHCODE_FILE}"
+docker_repo_commit_file="$2"
 commit_string_file=commitstring.txt
 
 # global var

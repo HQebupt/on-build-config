@@ -6,10 +6,10 @@ set -e
 # otherwise mongo and rabbitmq service won't run normally
 # use host mongo and rabbitmq is a chioce but the coverage may be decreased.
 # services will be restart in cleanup.sh, which script will always be executed.
-set +e
-echo $SUDO_PASSWORD |sudo -S service mongodb stop
+if [ "$(service mongodb status|grep  start )" != "" ]; then
+    echo $SUDO_PASSWORD |sudo -S service mongodb stop # "service mongodb stop" will return non 0 if service already stop,  while rabbitmq is fine
+fi
 echo $SUDO_PASSWORD |sudo -S service rabbitmq-server stop
-set -e
 
 rackhd_docker_images=`ls ${DOCKER_PATH}`
 # load docker images
@@ -44,13 +44,13 @@ find ./ -type f -exec sed -i -e "s/172.31.128.1/$DOCKER_RACKHD_IP/g" {} \;
 popd
 
 # this step must behind sed replace
-cd $RackHD_DIR/docker
+pushd $RackHD_DIR/docker
 # replace default config json with the one which is for test.
 cp -f ${WORKSPACE}/build-config/vagrant/config/mongo/config.json ./monorail/config.json
 #if clone file name is not repo name, this scirpt should be edited.
 for repo_tag in $image_list; do
     repo=${repo_tag%:*}
-    sed -i "s#${repo}.*#${repo_tag}#g" docker-compose-mini.yml
+    sed -i "s#${repo}.*#${repo_tag}#g" docker-compose.yml
 done
 
 mkdir -p $WORKSPACE/build-log
@@ -59,5 +59,28 @@ docker pull mongo:latest
 docker pull rabbitmq:management
 set -e
 
-docker-compose -f docker-compose-mini.yml up > $WORKSPACE/build-log/vagrant.log &
+docker-compose -f docker-compose.yml up > $WORKSPACE/build-log/vagrant.log &
+popd
 
+#Folder named "common" is the deepest folder in mount folder which is used to share files on docker
+#Check the "common"folder is used to make sure all folder is created (all mount opreation is done),then change the authority
+#The foler tree is defined in RackHD/docker/docker-compose*.yml , refer to the mount command in this file
+mountpath="$WORKSPACE/RackHD/docker/files/mount/common"
+retrytimes=5
+#Check the folder is exist or not 5 times, if not, break. 
+while [ ! -d "$mountpath" ]
+do
+    echo "mount is not finished"
+    retrytimes=$(($retrytimes-1))
+    echo "retry : $retrytimes times"
+    sleep 10
+    if [ $retrytimes -eq 0 ]; then
+        break
+    fi
+done
+
+if [ -d "$mountpath" ]; then
+#After 5 times check ,if mount is still not finished, it may failed. no need to change the permissions 
+    echo "change the permissions  of RackHD"
+    echo $SUDO_PASSWORD |sudo -S chown -R $USER:$USER $WORKSPACE/RackHD
+fi

@@ -2,7 +2,7 @@
 set -ex
 pushd $WORKSPACE
 
-curl --user $BINTRAY_CREDS -L "$MANIFEST_FILE_URL" -o rackhd-manifest
+curl "$MANIFEST_FILE_URL" -o rackhd-manifest
 ./on-build-config/build-release-tools/HWIMO-BUILD on-build-config/build-release-tools/application/make_debian_packages.py \
 --build-directory b \
 --manifest-file  rackhd-manifest \

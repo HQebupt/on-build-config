@@ -24,7 +24,7 @@ node{
                         timeout(5){
                             sh '''#!/bin/bash -ex
                             # Checkout code according to manifest file
-                            curl --user $BINTRAY_USERNAME:$BINTRAY_API_KEY -L "$MANIFEST_FILE_URL" -o rackhd-manifest
+                            curl "$MANIFEST_FILE_URL" -o rackhd-manifest
                             ./build-config/build-release-tools/HWIMO-BUILD build-config/build-release-tools/application/reprove.py \
                             --manifest rackhd-manifest \
                             --builddir b \

@@ -15,7 +15,7 @@ node{
                              usernameVariable: 'NPM_REGISTRY')]) {
       
             sh '''#download manifest
-            curl --user $BINTRAY_CREDS -L "$MANIFEST_FILE_URL" -o rackhd-manifest
+            curl "$MANIFEST_FILE_URL" -o rackhd-manifest
 
             ./build-config/build-release-tools/HWIMO-BUILD build-config/build-release-tools/application/release_npm_packages.py \
             --build-directory b \

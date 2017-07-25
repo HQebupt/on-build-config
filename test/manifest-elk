@@ -51,7 +51,7 @@
         {
             "branch": "remove_ELK", 
             "commit-id": "e63c39572d2975d03888fde22060180a0bf4e1b9", 
-            "repository": "https://github.com/RackHD/RackHD.git"
+            "repository": "https://github.com/hqebupt/RackHD.git"
         }, 
         {
             "branch": "master", 

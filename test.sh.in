@@ -80,7 +80,7 @@ execWithTimeout() {
     # expect -c "set timeout $timeout; spawn -noecho $cmd; expect timeout { exit 1 } eof { exit 0 }"
     expect << 'EOF'
       set timeout $env(timeout)
-      spawn -noecho $env(cmd)
+      eval spawn -noecho $env(cmd)
       expect {
           timeout { exit 1 }
           eof

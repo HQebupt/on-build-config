@@ -75,7 +75,7 @@ execWithTimeout() {
   echo "execWithTimeout() retry count is $retry"
   echo "execWithTimeout() timeout is set to $timeout"
 
-  dir=$(dirname $0)
+  dir=$(cd $(dirname $0); pwd)
   local time_cmd="${dir}/timeout_cmd.exp"
   if [ ! -x ${time_cmd} ]; then
       chmod a+x ${time_cmd}

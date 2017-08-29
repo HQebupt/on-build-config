@@ -174,7 +174,7 @@ setupRackHDConfig(){
     find ${on_build_config_dir} -type f -exec sed -i -e "s/172.31.128.1/${rackhd_dhcp_host_ip}/g" {} \;
     # this step must behind sed replace
     # replace default config json with the one which is for test.
-    cp -f ${on_build_config_dir}/vagrant/config/mongo/config.json ${rackhd_dir}/docker/monorail/config.json
+    cp -f ${on_build_config_dir}/resources/pipeline/rackhd/source_code/config.json ${rackhd_dir}/docker/monorail/config.json
     #if clone file name is not repo name, this scirpt should be edited.
     echo "Setup RackHD config done."
 

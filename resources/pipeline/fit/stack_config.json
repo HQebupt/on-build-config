@@ -49,21 +49,21 @@
         "docker":{
             "INIT":{
                 "GROUP":"-test deploy/rackhd_stack_init.py",
-                "STACK":"docker",
+                "STACK":"docker_local_run",
                 "LOG_LEVEL":4,
                 "EXTRA_OPTIONS":"--sm-amqp-use-user guest",
                 "LABEL":""
             },
             "FIT":{
                 "GROUP":"-test tests -group smoke",
-                "STACK":"docker",
+                "STACK":"docker_local_run",
                 "LOG_LEVEL":4,
                 "EXTRA_OPTIONS":"",
                 "LABEL":"smoke_test"
             },
             "OS_INSTALL":{
                 "GROUP":"-test tests/bootstrap/pr_gate_os_install.py",
-                "STACK":"docker",
+                "STACK":"docker_local_run",
                 "LOG_LEVEL":4,
                 "EXTRA_OPTIONS":"",
                 "LABEL":"os_install"

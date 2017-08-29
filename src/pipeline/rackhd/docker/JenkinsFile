@@ -7,14 +7,32 @@ node{
 
     Map ret_dict=[:]
 
-    stage("first manifest"){
-        def manifest= new pipeline.common.Manifest()
-        manifest.downloadManifest(env.MANIFEST_URL, "my_manifest_v1")
-        manifest_dict = [:]
-        manifest_dict["stash_name"] = "stash_manifest"
-        manifest_dict["stash_path"] = "my_manifest_v1"
-        stash name: manifest_dict["stash_name"], includes: manifest_dict["stash_path"]
+
+    deleteDir()
+    def manifest = new pipeline.common.Manifest()
+    def share_method = new pipeline.common.ShareMethod()
+    String manifest_path = ""
+    if("${env.MANIFEST_FILE_URL}" == "null" || "${env.MANIFEST_FILE_URL}" == ""){
+        stage("Generate Manifest"){
+            String library_dir = "on-build-config"
+            String work_dir = "b"
+            share_method.checkoutOnBuildConfig(library_dir)
+            manifest_path = manifest.generateManifestFromGithub(work_dir, library_dir)
+        }
+    } else{
+        manifest_path = manifest.downloadManifest(MANIFEST_FILE_URL, "manifest")
     }
+    archiveArtifacts "$manifest_path"
+    def manifest_dict = manifest.stashManifest("manifest", manifest_path)
+
+    //stage("first manifest"){
+    //    def manifest= new pipeline.common.Manifest()
+    //    manifest.downloadManifest(env.MANIFEST_URL, "my_manifest_v1")
+    //    manifest_dict = [:]
+    //    manifest_dict["stash_name"] = "manifest"
+    //    manifest_dict["stash_path"] = "my_manifest_v1/manifest"
+    //    stash name: manifest_dict["stash_name"], includes: manifest_dict["stash_path"]
+    //}
        stage("Docker Build"){
             //def docker_builder = new pipeline.rackhd.docker.Build()
             //ret_dict =  docker_builder.build( env.MANIFEST_URL, env.CLONE_DIR, env.WORKSPACE)
@@ -30,10 +48,16 @@ node{
 
 
        stage("Function Test"){
-            if ( env.TESTS != "" )
-            {
-                def function_test = new pipeline.rackhd.docker.FunctionTest()
-
+            if ( env.TESTS != "" ){
+                withCredentials([
+                    usernamePassword(credentialsId: 'ff7ab8d2-e678-41ef-a46b-dd0e780030e1',
+                    passwordVariable: 'SUDO_PASSWORD',
+                    usernameVariable: 'SUDO_USER')
+                ]) {
+                    Map rackhd_host_cred=[:]
+                    rackhd_host_cred["user"] = env.SUDO_USER
+                    rackhd_host_cred["password"] = env.SUDO_PASSWORD
+                    def function_test = new pipeline.rackhd.docker.FunctionTest()
                     env.TEST_STACK="virtual_stack"
 
                     def function_test_branches = [:]
@@ -42,17 +66,18 @@ node{
                     for(int i=0; i<tests.size(); i++){
                         String test_name = tests[i]
                         function_test_branches[test_name] = {
-                                function_test.runTest( env.TEST_STACK, test_name, used_resources, manifest_dict, ret_dict )          
+                            function_test.runTest( env.TEST_STACK, test_name, used_resources, manifest_dict, ret_dict, rackhd_host_cred)
                         }
                     }
 
-                try {
-                    parallel function_test_branches
-                    echo "parallel function_test_branches,huangqiang"
-               // } catch(error) {
-               //     echo "ERROR: funcition test... huangqiang:$error"
-                }finally {
-                    echo "Finally,huangqiang"
+                    try {
+                        parallel function_test_branches
+                        echo "parallel function_test_branches,huangqiang"
+                   // } catch(error) {
+                   //     echo "ERROR: funcition test... huangqiang:$error"
+                    }finally {
+                        echo "Finally,huangqiang"
+                    }
                 }
             }
         }

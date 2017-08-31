@@ -196,6 +196,8 @@ waitForAPI() {
 }
 
 waitForNodes() {
+  set -x
+  echo "################### waitForNodes##################"
   # Wait for virtual nodes to be discovered, this expects exactly the number of virtual
   # compute nodes defined by TOTAL_VCOMPUTES at the beginning of this script
   netstat -ntlp

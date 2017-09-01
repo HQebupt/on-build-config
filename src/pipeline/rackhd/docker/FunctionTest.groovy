@@ -47,8 +47,8 @@ def runTest(String stack_type, String test_name, ArrayList<String> used_resource
 
                     sh """#!/bin/bash
                     echo "download docker images......"
-                    wget -q http://10.62.59.175:8080/job/qiang/job/docker-refactor/58/artifact/rackhd_docker_images.tar -O rackhd_docker_images.tar
-                    wget -q http://10.62.59.175:8080/job/qiang/job/docker-refactor/58/artifact/build_record -O build_record
+                     wget -q http://10.240.19.21/job/SprintRelease/47/artifact/rackhd_docker_images.tar -O rackhd_docker_images.tar
+                     wget -q http://10.240.19.21/job/SprintRelease/47/artifact/build_record -O build_record
                     """
                     String docker_tar_file   = "$WORKSPACE" + "/" + docker_build_ret_dict["DOCKER_STASH_PATH"]
                     rackhd_deployer.deploy(library_dir, log_dir, rackhd_dir, docker_tar_file)

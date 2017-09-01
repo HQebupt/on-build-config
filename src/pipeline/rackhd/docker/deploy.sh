@@ -101,6 +101,8 @@ cleanUp(){
     if [ -n "$volume" ]; then
       echo $SUDO_PASSWORD |sudo -S docker volume rm $volume
     fi
+    echo "Docker logout."
+    echo $SUDO_PASSWORD | sudo -S docker logout
     echo "Clean up done."
 }
 

@@ -200,7 +200,7 @@ setupDockerComposeConfig(){
     # load docker images , for each on-xxx, there will be 2 tags: date-hash and nightly
     # so in this case, we only put the date-hash tags in the output file( to help to create build_record file)
 
-    echo $SUDO_PASSWORD |sudo -S docker load -i $rackhd_docker_images | grep "UTC" | tee ${tmp_file}
+    echo $SUDO_PASSWORD |sudo -S docker load -i $rackhd_docker_images | grep -v "latest" | grep -v "nightly" | tee ${tmp_file}
 
     if [ $? -ne 0 ]; then
         echo "[Error] Docker Load fail, aborted!"

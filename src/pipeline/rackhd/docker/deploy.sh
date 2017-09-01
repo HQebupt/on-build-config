@@ -123,6 +123,8 @@ deployRackHD(){
     setupDockerComposeConfig ${rackhd_docker_images} ${rackhd_dir}
     # Build docker image and run it
     dockerUp ${log_dir} ${rackhd_dir}
+    # Check the RackHD API is accessable
+    waitForAPI
     echo "Deploy RackHD done."
 }
 
@@ -231,9 +233,44 @@ dockerUp(){
     echo $SUDO_PASSWORD |sudo -S docker pull rabbitmq:management
     set -e
 
-    echo $SUDO_PASSWORD |sudo -S docker-compose -f ${rackhd_dir}/docker/docker-compose.yml up > ${log_dir}/rackhd.log &
+    echo "##################docker ps -a before docker-compose up."
+    docker ps -a
+    echo "##################docker ps -a before docker-compose up."
+    echo $SUDO_PASSWORD |sudo -S docker-compose -f ${rackhd_dir}/docker/docker-compose.yml up  &
     echo "Docker up done."
 }
+
+##############################################
+#
+# Check the API of RackHD is accessable
+#
+#############################################
+waitForAPI() {
+    echo "*****************************************************************************************************"
+    echo "Try to access the RackHD API"
+    echo "*****************************************************************************************************"
+    timeout=0
+    maxto=60
+    set +e
+    url=http://localhost:9090/api/2.0/nodes #9090 is the rackhd api port which docker uses
+    while [ ${timeout} != ${maxto} ]; do
+        wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 1 --continue ${url}
+        if [ $? = 0 ]; then
+          break
+        fi
+        sleep 10
+        timeout=`expr ${timeout} + 1`
+    done
+    set -e
+    if [ ${timeout} == ${maxto} ]; then
+        echo "Timed out waiting for RackHD API service (duration=`expr $maxto \* 10`s)."
+        exit 1
+    fi
+    echo "*****************************************************************************************************"
+    echo "RackHD API is accessable"
+    echo "*****************************************************************************************************"
+}
+
 
 
 ##############################################

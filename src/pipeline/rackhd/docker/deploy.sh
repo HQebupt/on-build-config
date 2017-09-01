@@ -239,7 +239,7 @@ dockerUp(){
     echo "##################docker ps -a before docker-compose up."
     docker ps -a
     echo "##################docker ps -a before docker-compose up."
-    echo $SUDO_PASSWORD |sudo -S docker-compose -f ${rackhd_dir}/docker/docker-compose.yml up  &
+    echo $SUDO_PASSWORD |sudo -S docker-compose -f ${rackhd_dir}/docker/docker-compose.yml up > ${log_dir}/rackhd.log &
     echo "Docker up done."
 }
 

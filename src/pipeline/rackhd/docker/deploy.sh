@@ -75,7 +75,8 @@ cleanUp(){
 
     echo "Stop & rm all docker running containers " 
     echo $SUDO_PASSWORD |sudo -S docker-compose -f ${rackhd_dir}/docker/docker-compose.yml stop 
-    echo $SUDO_PASSWORD |sudo -S docker-compose -f ${rackhd_dir}/docker/docker-compose.yml rm
+    # echo $SUDO_PASSWORD |sudo -S docker-compose -f ${rackhd_dir}/docker/docker-compose.yml rm
+    echo $SUDO_PASSWORD | sudo -S docker rm `docker ps -aq`
 
     echo "Chown rackhd/files volume on hosts"
     echo $SUDO_PASSWORD |sudo -S chown -R $USER:$USER ${rackhd_dir}

@@ -1,6 +1,6 @@
 package pipeline.rackhd.docker
 
-def build(String manifest_path, String artifactory, String stage_repo_name, String artifactory_url, String stage_repo_name){
+def build(String manifest_path, String artifactory_url, String stage_repo_name){
     def ret_dict=[:]
     node(build_docker_node){
             deleteDir()

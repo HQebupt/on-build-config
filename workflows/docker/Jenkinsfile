@@ -1,0 +1,80 @@
+@Library('my_library') _
+node{
+    timestamps{
+        withEnv([
+            "MANIFEST_FILE_URL=${env.MANIFEST_FILE_URL}",
+            "ARTIFACTORY_URL=${env.ARTIFACTORY_URL}",
+            "STAGE_REPO_NAME=${env.STAGE_REPO_NAME}",
+            "TEST_STACK=${env.TEST_STACK}",
+            "TESTS=${env.TESTS}",
+            "CLONE_DIR=${env.CLONE_DIR}",
+            "KEEP_FAILURE_ENV=${env.KEEP_FAILURE_ENV}",
+            "KEEP_MINUTES=${env.KEEP_MINUTES}"
+        ]){
+            Map ret_dict=[:]
+            deleteDir()
+            def manifest = new pipeline.common.Manifest()
+            def share_method = new pipeline.common.ShareMethod()
+            String manifest_path = ""
+            if("${env.MANIFEST_FILE_URL}" == "null" || "${env.MANIFEST_FILE_URL}" == ""){
+                stage("Generate Manifest"){
+                    String library_dir = "on-build-config"
+                    String work_dir = "b"
+                    share_method.checkoutOnBuildConfig(library_dir)
+                    manifest_path = manifest.generateManifestFromGithub(work_dir, library_dir)
+                }
+            } else{
+                manifest_path = manifest.downloadManifest(MANIFEST_FILE_URL, "manifest")
+            }
+            archiveArtifacts "$manifest_path"
+            def manifest_dict = manifest.stashManifest("manifest", manifest_path)
+
+            stage("Docker Build"){
+                def docker_builder = new pipeline.rackhd.docker.Build()
+                ret_dict =  docker_builder.build(MANIFEST_FILE_URL, ARTIFACTORY_URL, STAGE_REPO_NAME)
+            }
+            try{
+                stage("Function Test"){
+                    if ( TESTS != "" ){
+                        withCredentials([
+                            usernamePassword(credentialsId: 'ff7ab8d2-e678-41ef-a46b-dd0e780030e1',
+                            passwordVariable: 'SUDO_PASSWORD',
+                            usernameVariable: 'SUDO_USER')
+                        ]) {
+                            Map rackhd_host_cred=[:]
+                            rackhd_host_cred["user"] = env.SUDO_USER
+                            rackhd_host_cred["password"] = env.SUDO_PASSWORD
+                            def function_test = new pipeline.rackhd.docker.FunctionTest()
+
+                            def function_test_branches = [:]
+                            ArrayList<String> used_resources = []
+                            List tests = Arrays.asList( env.TESTS.split(','))
+                            for(int i=0; i<tests.size(); i++){
+                                String test_name = tests[i]
+                                function_test_branches[test_name] = {
+                                    function_test.runTest( env.TEST_STACK, test_name, used_resources, manifest_dict, ret_dict, rackhd_host_cred)
+                                }
+                            }
+
+                            if(tests.size()>0){
+                                parallel function_test_branches
+                                echo "parallel function_test_branches"
+                            }
+                        }
+                    }
+                }
+                currentBuild.result = "SUCCESS"
+            } finally {
+                if ("${currentBuild.result}" != "SUCCESS"){
+                    currentBuild.result = "FAILURE"
+                }
+                stage("Publish Result"){
+                    share_method.sendResultToSlack()
+                    share_method.sendResultToMysql(true, true)
+                }
+            }
+        }
+    }
+}
+
+

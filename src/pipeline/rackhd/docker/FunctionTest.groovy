@@ -42,14 +42,14 @@ def runTest(String stack_type, String test_name, ArrayList<String> used_resource
                     echo "[DEBUG]virutal_node stopFetch done."
 
                     // deploy rackhd and virtual nodes
-                    //String docker_build_unstash_name = docker_build_ret_dict["DOCKER_STASH_NAME"]
-                    //unstash docker_build_unstash_name
+                    String docker_build_unstash_name = docker_build_ret_dict["DOCKER_STASH_NAME"]
+                    unstash docker_build_unstash_name
 
-                    sh """#!/bin/bash
-                    echo "download docker images......"
-                     wget -q http://10.240.19.21/job/SprintRelease/47/artifact/rackhd_docker_images.tar -O rackhd_docker_images.tar
-                     wget -q http://10.240.19.21/job/SprintRelease/47/artifact/build_record -O build_record
-                    """
+                    //sh """#!/bin/bash
+                    //echo "download docker images......"
+                     //wget -q http://10.240.19.21/job/SprintRelease/47/artifact/rackhd_docker_images.tar -O rackhd_docker_images.tar
+                     //wget -q http://10.240.19.21/job/SprintRelease/47/artifact/build_record -O build_record
+                    //"""
                     String docker_tar_file   = "$WORKSPACE" + "/" + docker_build_ret_dict["DOCKER_STASH_PATH"]
                     rackhd_deployer.deploy(library_dir, log_dir, rackhd_dir, docker_tar_file)
                     echo "[DEBUG]rackhd_deployer.deploy done."

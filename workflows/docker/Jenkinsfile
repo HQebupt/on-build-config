@@ -7,7 +7,6 @@ node{
             "STAGE_REPO_NAME=${env.STAGE_REPO_NAME}",
             "TEST_STACK=${env.TEST_STACK}",
             "TESTS=${env.TESTS}",
-            "CLONE_DIR=${env.CLONE_DIR}",
             "KEEP_FAILURE_ENV=${env.KEEP_FAILURE_ENV}",
             "KEEP_MINUTES=${env.KEEP_MINUTES}"
         ]){
@@ -31,7 +30,7 @@ node{
 
             stage("Docker Build"){
                 def docker_builder = new pipeline.rackhd.docker.Build()
-                ret_dict =  docker_builder.build(MANIFEST_FILE_URL, ARTIFACTORY_URL, STAGE_REPO_NAME)
+                ret_dict =  docker_builder.build(manifest_dict, ARTIFACTORY_URL, STAGE_REPO_NAME)
             }
             try{
                 stage("Function Test"){

@@ -380,7 +380,7 @@ main(){
     #docker images build
     echo "docker images build start."
     local build_rec=${WORKDIR}/build_record
-    buildDockers $CLONE_DIR build_rec
+    buildDockers $CLONE_DIR ${build_rec}
 
     # save docker image to tar
     echo "save docker image to tar:rackhd_docker_images.tar."

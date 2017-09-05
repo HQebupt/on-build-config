@@ -51,7 +51,7 @@ node{
                             for(int i=0; i<tests.size(); i++){
                                 String test_name = tests[i]
                                 function_test_branches[test_name] = {
-                                    function_test.runTest( env.TEST_STACK, test_name, used_resources, manifest_dict, ret_dict, rackhd_host_cred)
+                                    function_test.runTest( env.TEST_STACK, test_name, used_resources, manifest_dict, ret_dict, rackhd_host_cred, true, 60)
                                 }
                             }
 

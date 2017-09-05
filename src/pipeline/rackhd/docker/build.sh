@@ -119,7 +119,7 @@ buildOnCore() {
     echo "[DEBUG]build on-core"
     pushd on-core
         addCommitString ${commitstring_file}
-        docker build -t rackhd/on-core${on_core_tag} .
+        docker build -t rackhd/on-core:${on_core_tag} .
     popd
 }
 
@@ -130,8 +130,7 @@ buildOnTasks() {
     echo "[DEBUG]build on-tasks"
     pushd on-tasks
         addCommitString ${commitstring_file}
-        sed -i "s/^FROM rackhd\/on-core:\${tag}/FROM rackhd\/on-core${on_core_tag}/" Dockerfile
-        docker build -t rackhd/on-tasks${on_tasks_tag} .
+        docker build --build-arg tag=${on_core_tag} -t rackhd/on-tasks:${on_tasks_tag} .
     popd
 }
 
@@ -144,7 +143,6 @@ buildOnImagebuilder() {
     pushd $repo
         addCommitString ${commitstring_file}
         echo "Building rackhd/$repo:${PKG_TAG}"
-        cp Dockerfile ../Dockerfile.bak
         cp ${commitstring_file} ./common/
         docker build -t rackhd/files:${PKG_TAG} .
     popd
@@ -153,8 +151,7 @@ buildOnImagebuilder() {
 buildCommon() {
     local repo=$1
     local commitstring_file=$2
-    local on_core_tag=$3
-    local on_tasks_tag=$4
+    local on_base_tag=$3
     echo "[DEBUG]build $repo"
 
     if [ ! -d $repo ]; then
@@ -168,13 +165,9 @@ buildCommon() {
         addCommitString ${commitstring_file}
 
         echo "Building rackhd/$repo:${PKG_TAG}"
-        cp Dockerfile ../Dockerfile.bak
         #Based on newly build upstream image to build
-        sed -i "s/^FROM rackhd\/on-core:\${tag}/FROM rackhd\/on-core${on_core_tag}/" Dockerfile
-        sed -i "s/^FROM rackhd\/on-tasks:\${tag}/FROM rackhd\/on-tasks${on_tasks_tag}/" Dockerfile
-        docker build -t rackhd/$repo:${PKG_TAG} .
-        mv ../Dockerfile.bak Dockerfile
-    popd    
+        docker build --build-arg tag=${on_base_tag} -t rackhd/$repo:${PKG_TAG} .
+    popd
 }
 
 ###################################
@@ -198,25 +191,30 @@ doBuild() {
     #Set an empty TAG before each build
 
     tagCalculate "./on-core" $RACKHD_CHANGELOG_VERSION
-    local ON_CORE_TAG=:${PKG_TAG}
+    local ON_CORE_TAG=${PKG_TAG}
 
     tagCalculate "./on-tasks" $RACKHD_CHANGELOG_VERSION
-    local ON_TASKS_TAG=:${PKG_TAG}
+    local ON_TASKS_TAG=${PKG_TAG}
 
     local repos_tags=""
 
     buildOnCore ${commitstring_file} ${ON_CORE_TAG}
-    repos_tags=$repos_tags"rackhd/on-core"${ON_CORE_TAG}" "
+    repos_tags=$repos_tags"rackhd/on-core:"${ON_CORE_TAG}" "
 
     buildOnTasks ${commitstring_file} ${ON_CORE_TAG} ${ON_TASKS_TAG}
-    repos_tags=$repos_tags"rackhd/on-tasks"${ON_TASKS_TAG}" "
+    repos_tags=$repos_tags"rackhd/on-tasks:"${ON_TASKS_TAG}" "
 
     buildOnImagebuilder ${commitstring_file}
-    repos_tags=$repos_tags"rackhd/files":${PKG_TAG}" "
+    repos_tags=$repos_tags"rackhd/files:"${PKG_TAG}" "
 
-    local repos=$(echo "on-syslog on-dhcp-proxy on-tftp on-wss on-statsd on-taskgraph on-http")
+    local repos=$(echo "on-syslog on-dhcp-proxy on-tftp on-wss on-statsd")
     for repo in $repos;do
-        buildCommon ${repo} ${commitstring_file} ${ON_CORE_TAG} ${ON_TASKS_TAG}
+        buildCommon ${repo} ${commitstring_file} ${ON_CORE_TAG}
+        repos_tags=$repos_tags"rackhd/"$repo:${PKG_TAG}" "
+    done
+    local repos=$(echo "on-taskgraph on-http")
+    for repo in $repos;do
+        buildCommon ${repo} ${commitstring_file} ${ON_TASKS_TAG}
         repos_tags=$repos_tags"rackhd/"$repo:${PKG_TAG}" "
     done
 

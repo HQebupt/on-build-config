@@ -1,0 +1,52 @@
+@Library('my_library') _
+node{
+    deleteDir()
+    def share_method = new pipeline.common.ShareMethod()
+    String label_name = "unittest"
+    ArrayList<String> used_resources = []
+    try{
+        lock(label:label_name,quantity:1){
+            node_name = share_method.occupyAvailableLockedResource(label_name, used_resources)
+            resources_name = shareMethod.getLockedResourceName(label_name)
+            node(node_name){
+                deleteDir()
+                String library_dir = "on-build-config"
+                share_method.checkoutOnBuildConfig(library_dir)
+                stage("build base image"){
+                    withCredentials([
+                        usernamePassword(credentialsId: 'ff7ab8d2-e678-41ef-a46b-dd0e780030e1',
+                                         passwordVariable: 'SUDO_PASSWORD',
+                                         usernameVariable: 'SUDO_USER'),
+                        usernamePassword(credentialsId: 'rackhd-ci-docker-hub',
+                             passwordVariable: 'DOCKERHUB_PASS',
+                             usernameVariable: 'DOCKERHUB_USER')
+                    ]){
+                        String dockerfile_path = library_dir + "/resources/pipeline/rackhd/base_docker/"
+                        sh """#!/bin/bash -ex
+                        bash $library_dir/src/pipeline/rackhd/docker/build_base_image.sh \
+                               --DOCKERFILE_PATH ${dockerfile_path} \
+                               --TARGET_PATH ${WORKSPACE} \
+                               --USER ${SUDO_USER} \
+                               --SUDO_PASSWORD ${SUDO_PASSWORD} \
+                               --DOCKERHUB_USER ${DOCKERHUB_USER} \
+                               --DOCKERHUB_PASS ${DOCKERHUB_PASS}
+                        """
+                        archiveArtifacts 'rackhd_pipeline_docker.tar'
+                    }
+                    currentBuild.result = "SUCCESS"
+                }
+            }
+        }
+    } finally {
+        used_resources.remove(node_name)
+
+        if ("${currentBuild.result}" != "SUCCESS"){
+            currentBuild.result = "FAILURE"
+        }
+        stage("Publish Result"){
+            share_method.sendResultToSlack()
+            share_method.sendResultToMysql(true, true)
+        }
+    }
+}
+

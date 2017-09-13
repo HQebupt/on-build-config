@@ -1,0 +1,17 @@
+{
+    "build-name": "rackhd-devel", 
+    "build-requirements": "xenial", 
+    "downstream-jobs": [], 
+    "repositories": [
+        {
+            "branch": "master", 
+            "commit-id": "b6a6104c5d787ea2b4c2d29905aa072f53e4ef50", 
+            "repository": "https://github.com/hqebupt/on-core.git"
+        }, 
+        {
+            "branch": "master", 
+            "commit-id": "99d82e1ab1524e6a10b38f9570ba7e5d3276428f", 
+            "repository": "https://github.com/hqebupt/RackHD.git"
+        }
+    ]
+}

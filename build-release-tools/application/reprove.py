@@ -24,7 +24,7 @@ builddir: the destination for checked out repositories.
 action: the supported action, includes checkout branch.
         "checkout": it  will clone all the repositories in a manifest file;
                     if "branch" in a repository dictionary, the action will check out to the branch.
-                    if "commit-id" in a repository dictionary, the action will reset to the commit 
+                    if "commit-id" in a repository dictionary, the action will reset to the commit
         "branch": it will create a new branch for all the repositories under builddir
                   and update the package.json to point to the new branch.
                   For example:
@@ -54,7 +54,7 @@ from manifest import Manifest
 from common import *
 
 class ManifestActions(object):
-    
+
     """
     valid actions:
     checkout: check out a set of repositories to match the manifest file
@@ -100,7 +100,7 @@ class ManifestActions(object):
         """
         return self._force
 
-    
+
     def set_branch_name(self, branch):
         """
         Standard setter for branch_name
@@ -123,7 +123,7 @@ class ManifestActions(object):
         :return: None
         """
         self._git_credentials = git_credential
-        self.repo_operator.setup_gitbit(credentials=self._git_credentials)    
+        self.repo_operator.setup_gitbit(credentials=self._git_credentials)
 
     def get_manifest(self):
         """
@@ -174,13 +174,13 @@ class ManifestActions(object):
             print "Failed to create a Manifest instance for the manifest file {0} \nERROR:\n{1}"\
                   .format(manifest_path, error.message)
             sys.exit(1)
-         
+
         for repo in self._manifest.repositories:
             repo['directory-name'] = self.directory_for_repo(repo)
 
     def check_builddir(self):
         """
-        Checks the given builddir name and force flag. 
+        Checks the given builddir name and force flag.
         Deletes exists directory if one already exists and --force is set
         :return: None
         """
@@ -192,6 +192,7 @@ class ManifestActions(object):
                 print "Unwilling to overwrite destination builddir of {0}".format(self._builddir)
                 sys.exit(1)
 
+        print "destination builddir of {0} , make it".format(self._builddir)
         os.makedirs(self._builddir)
 
     def get_repositories(self):
@@ -205,7 +206,7 @@ class ManifestActions(object):
         except RuntimeError as error:
             print "Exiting due to error: {0}".format(error)
             sys.exit(1)
-            
+
     def directory_for_repo(self, repo):
         """
         Get the directory of a repository
@@ -243,7 +244,7 @@ class ManifestActions(object):
 
         # Start to update the packge.json, for example:
         # - git+https://github.com/RackHD/on-core.git
-        # + 
+        # +
         if 'packagerefs' in self.actions:
             self.update_package_references()
 
@@ -297,8 +298,8 @@ class ManifestActions(object):
 
         except RuntimeError as error:
             print "Exiting due to error: {0}".format(error)
-            sys.exit(1)   
-    
+            sys.exit(1)
+
     def checkout_branch_repositories(self, branch):
         repo_list = self._manifest.repositories
         if repo_list is None:
@@ -428,7 +429,7 @@ class ManifestActions(object):
             # Loop through list of repos and create specified tag on each
             for repo in repo_list:
                 self.set_repo_tagname(repo)
-  
+
     def set_repo_tagname(self, repo):
         """
         Add a tag to a repository
@@ -508,7 +509,7 @@ def main():
     try:
         # Parse arguments
         args = parse_command_line(sys.argv[1:])
-    
+
         # Create and initial an instance of ManifestActions
         manifest_actions = ManifestActions(args.manifest, args.builddir, force=args.force, git_credentials=args.git_credential, jobs=args.jobs, actions=args.action, branch_name=args.branch_name, tag_name=args.tag_name)
 

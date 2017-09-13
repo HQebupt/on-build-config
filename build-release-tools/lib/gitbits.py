@@ -168,6 +168,7 @@ class GitBit(object):
         if directory is not None:
             config_args += ["-C", directory]
 
+        print '=======%s=======' %(self.get_credentials())
         if len(self.get_credentials()) > 0:
             self.__write_credential_file()
             config_args += ["-c", "credential.helper=store --file {0}".format(self.__credential_filename)]
